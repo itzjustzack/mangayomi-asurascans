@@ -114,10 +114,24 @@ const imageUrl = img
     });
   }
 
-  return {
-    list: list,
-    hasNextPage: list.length > 0
-  };
+  
+const nextUrl =
+  "https://asurascans.com/browse/comics?page=" + (page + 1);
+
+const nextRes = await client.get(
+  nextUrl,
+  this.getHeaders(nextUrl)
+);
+
+const nextDoc = new Document(nextRes.body);
+
+const nextLinks = nextDoc.select('a[href*="/comics/"]');
+
+return {
+  list: list,
+  hasNextPage: nextLinks.length > 0
+};
+
 }
 
 
