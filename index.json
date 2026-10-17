@@ -1,0 +1,25 @@
+
+[
+  {
+    "name": "Asura Scans",
+    "id": 2847619031,
+    "baseUrl": "https://asurascans.com",
+    "lang": "en",
+    "typeSource": "single",
+    "iconUrl": "https://asurascans.com/favicon.ico",
+    "dateFormat": "",
+    "dateFormatLocale": "",
+    "isNsfw": false,
+    "hasCloudflare": false,
+    "sourceCodeUrl": "https://raw.githubusercontent.com/itzjustzack/mangayomi-asurascans/main/asurascans.js",
+    "apiUrl": "",
+    "version": "0.0.1",
+    "isManga": true,
+    "itemType": 0,
+    "isFullData": false,
+    "appMinVerReq": "0.5.0",
+    "additionalParams": "",
+    "sourceCodeLanguage": 1,
+    "notes": "Custom Asura Scans extension"
+  }
+]
