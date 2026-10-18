@@ -1,5 +1,5 @@
 const mangayomiSources = [{
-    "name": "Asura Scans",
+    "name": "Asura Scans DEV",
     "lang": "en",
     "baseUrl": "https://asurascans.com",
     "apiUrl": "",
@@ -7,7 +7,7 @@ const mangayomiSources = [{
     "typeSource": "single",
     "itemType": 0,
     "isNsfw": false,
-    "version": "0.0.10",
+    "version": "0.0.11",
     "pkgPath": "",
     "notes": "Stable Asura Scans extension"
 }];
