@@ -176,9 +176,78 @@ return {
      *     hasNextPage: true
      * };
      */
-    async getLatestUpdates(page) {
-    return await this.getPopular(page);
+    
+async getLatestUpdates(page) {
+  const client = new Client();
+
+  const browseUrl =
+    "https://asurascans.com/browse/comics?page=" + page;
+
+  const res = await client.get(
+    browseUrl,
+    this.getHeaders(browseUrl)
+  );
+
+  const doc = new Document(res.body);
+  const links = doc.select('a[href*="/comics/"]');
+
+  const list = [];
+  const seen = new Set();
+
+  for (const item of links) {
+    const link = item.attr("href");
+    const img = item.selectFirst("img");
+
+    const name = (
+      img ? (img.attr("alt") || "") : item.text
+    ).trim();
+
+    const imageUrl = img
+      ? (img.attr("data-src") || img.attr("src") || "")
+      : "";
+
+    if (!link || !name || seen.has(link)) continue;
+
+    seen.add(link);
+
+    list.push({
+      name: name,
+      link: link,
+      imageUrl: imageUrl.startsWith("/")
+        ? "https://asurascans.com" + imageUrl
+        : imageUrl
+    });
+  }
+
+  let hasNextPage = false;
+
+  if (list.length > 0) {
+    try {
+      const nextUrl =
+        "https://asurascans.com/browse/comics?page=" +
+        (page + 1);
+
+      const nextRes = await client.get(
+        nextUrl,
+        this.getHeaders(nextUrl)
+      );
+
+      const nextDoc = new Document(nextRes.body);
+      const nextLinks =
+        nextDoc.select('a[href*="/comics/"]');
+
+      hasNextPage = nextLinks.length > 0;
+    } catch (error) {
+      hasNextPage = true;
+    }
+  }
+
+  return {
+    list: list,
+    hasNextPage: hasNextPage
+  };
 }
+
 
     /**
      * Returns one page of search results.
