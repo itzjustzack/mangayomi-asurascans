@@ -92,14 +92,24 @@ async getPopular(page) {
     const link = item.attr("href");
     const img = item.selectFirst("img");
 
-    const name = (
-      img
-        ? (img.attr("alt") || item.text)
-        : item.text
-    )
-      .replace(/^\s*\d+\s+/, "")
-      .replace(/\s+\d+(?:\.\d+)?\s*$/, "")
-      .trim();
+    
+const name = (
+  img
+    ? (img.attr("alt") || item.text)
+    : item.text
+)
+  .replace(/â/g, "’")
+  .replace(/â/g, "‘")
+  .replace(/â/g, "“")
+  .replace(/â/g, "”")
+  .replace(/â/g, "–")
+  .replace(/â/g, "—")
+  .replace(/â¦/g, "…")
+  .replace(/Â /g, " ")
+  .replace(/^\s*\d+\s+/, "")
+  .replace(/\s+\d+(?:\.\d+)?\s*$/, "")
+  .trim();
+
 
     let imageUrl = img
       ? (img.attr("data-src") || img.attr("src") || "")
