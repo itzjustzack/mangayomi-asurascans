@@ -484,9 +484,11 @@ if (lower === "today") {
 }
 
 
-  return Number.isNaN(timestamp)
-    ? 0
-    : Math.floor(timestamp / 1000);
+  
+return Number.isFinite(timestamp)
+  ? String(Math.floor(timestamp))
+  : "0";
+
 })()
 
   }))
