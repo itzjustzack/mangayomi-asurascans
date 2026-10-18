@@ -30,6 +30,22 @@ const mangayomiSources = [{
 //       Described in getDetail.
 //   new SharedPreferences().get(key)
 //       Described in getSourcePreferences.
+
+function cleanAsuraText(value) {
+  if (!value) return "";
+
+  return String(value)
+    .replace(/\u00E2\u0080\u0099/g, "\u2019")
+    .replace(/\u00E2\u0080\u0098/g, "\u2018")
+    .replace(/\u00E2\u0080\u009C/g, "\u201C")
+    .replace(/\u00E2\u0080\u009D/g, "\u201D")
+    .replace(/\u00E2\u0080\u0093/g, "\u2013")
+    .replace(/\u00E2\u0080\u0094/g, "\u2014")
+    .replace(/\u00E2\u0080\u00A6/g, "\u2026")
+    .replace(/\u00C2\u00A0/g, " ")
+    .trim();
+}
+
 class DefaultExtension extends MProvider {
     /**
      * Optional. Extra HTTP headers to send with this source's requests.
@@ -368,7 +384,9 @@ async getDetail(url) {
   const title = doc.selectFirst("h1");
 
   return {
-    name: title ? title.text.trim() : "Title not found",
+    name: title
+  ? cleanAsuraText(title.text)
+  : "Title not found",
     
 imageUrl: (() => {
   const meta = doc.selectFirst('meta[property="og:image"]');
