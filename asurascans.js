@@ -157,8 +157,8 @@ return {
      *     false
      */
     get supportsLatest() {
-        throw new Error("supportsLatest not implemented");
-    }
+    return true;
+}
 
     /**
      * Returns one page of the most recently updated entries.
@@ -177,8 +177,8 @@ return {
      * };
      */
     async getLatestUpdates(page) {
-        throw new Error("getLatestUpdates not implemented");
-    }
+    return await this.getPopular(page);
+}
 
     /**
      * Returns one page of search results.
