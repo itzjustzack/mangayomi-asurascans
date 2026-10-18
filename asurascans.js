@@ -1,5 +1,5 @@
 const mangayomiSources = [{
-    "name": "Asura Scans",
+    name: "Asura Scans",
     "lang": "en",
     "baseUrl": "https://asurascans.com",
     "apiUrl": "",
@@ -7,9 +7,9 @@ const mangayomiSources = [{
     "typeSource": "single",
     "itemType": 0,
     "isNsfw": false,
-    "version": "0.0.10",
+    "version": "0.0.12",
     "pkgPath": "",
-    "notes": "Stable Asura Scans extension"
+    notes: "Stable release with chapter upload dates"
 }];
 
 // Every method returns plain data (objects, arrays, strings, numbers and
@@ -440,7 +440,59 @@ if (name.toLowerCase().includes("test chapter")) {
 
 
 
-    url: item.attr("href")
+    
+url: item.attr("href"),
+
+dateUpload: (() => {
+  const dateElement = item.selectFirst(
+    "div.text-right span"
+  );
+
+  if (!dateElement) return 0;
+
+  const dateText = dateElement.text.trim();
+  
+const lower = dateText.toLowerCase();
+const now = Date.now();
+let timestamp;
+
+if (lower === "today") {
+  timestamp = now;
+} else if (lower === "yesterday") {
+  timestamp = now - 86400000;
+} else if (lower === "last week") {
+  timestamp = now - 7 * 86400000;
+} else {
+  const match = lower.match(
+    /(\d+)\s+(minute|hour|day|week|month|year)s?\s+ago/
+  );
+
+  if (match) {
+    const units = {
+      minute: 60000,
+      hour: 3600000,
+      day: 86400000,
+      week: 604800000,
+      month: 2592000000,
+      year: 31536000000
+    };
+
+    timestamp = now - Number(match[1]) * units[match[2]];
+  } else {
+    timestamp = Date.parse(dateText);
+  }
+}
+
+
+  
+
+return Number.isFinite(timestamp)
+  ? String(Math.floor(timestamp))
+  : "";
+
+
+})()
+
   }))
   
 .filter(item =>
