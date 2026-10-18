@@ -13,7 +13,7 @@
     "hasCloudflare": false,
     "sourceCodeUrl": "https://raw.githubusercontent.com/itzjustzack/mangayomi-asurascans/development/asurascans.js",
     "apiUrl": "",
-    "version": "0.0.3",
+    "version": "0.0.4",
     "isManga": true,
     "itemType": 0,
     "isFullData": false,
