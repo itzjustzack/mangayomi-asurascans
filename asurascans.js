@@ -65,18 +65,26 @@ getHeaders(url) {
      */
 
 
-async getPopular(page) {
-  const client = new Client();
-  const browseUrl =
-  "https://asurascans.com/browse/comics?page=" + page;
 
-const res = await client.get(
-  browseUrl,
-  this.getHeaders(browseUrl)
-);
+async getPopular(page) {
+  if (page > 1) {
+    return {
+      list: [],
+      hasNextPage: false
+    };
+  }
+
+  const client = new Client();
+  const url = "https://asurascans.com/series-ranking";
+
+  const res = await client.get(
+    url,
+    this.getHeaders(url)
+  );
 
   const doc = new Document(res.body);
   const links = doc.select('a[href*="/comics/"]');
+
   const list = [];
   const seen = new Set();
 
@@ -84,69 +92,42 @@ const res = await client.get(
     const link = item.attr("href");
     const img = item.selectFirst("img");
 
-const name = (
-  img
-    ? (img.attr("alt") || "")
-    : item.text
-)
-  .replace(/â/g, "’")
-  .replace(/â/g, "“")
-  .replace(/â/g, "”")
-  .replace(/â/g, "–")
-  .replace(/â/g, "—")
-  .trim();
+    const name = (
+      img
+        ? (img.attr("alt") || item.text)
+        : item.text
+    )
+      .replace(/^\s*\d+\s+/, "")
+      .replace(/\s+\d+(?:\.\d+)?\s*$/, "")
+      .trim();
 
-const imageUrl = img
-  ? (img.attr("src") || img.attr("data-src") || "")
-  : "";
+    let imageUrl = img
+      ? (img.attr("data-src") || img.attr("src") || "")
+      : "";
 
     if (!link || !name || seen.has(link)) continue;
-    if (!link.includes("/comics/")) continue;
 
     seen.add(link);
+
+    if (imageUrl.startsWith("/")) {
+      imageUrl = "https://asurascans.com" + imageUrl;
+    }
 
     list.push({
       name: name,
       link: link,
-      imageUrl: imageUrl.startsWith("/")
-  ? "https://asurascans.com" + imageUrl
-  : imageUrl
+      imageUrl: imageUrl
     });
+
+    if (list.length >= 30) break;
   }
 
-  
-
-let hasNextPage = false;
-
-if (list.length > 0) {
-  try {
-    const nextUrl =
-      "https://asurascans.com/browse/comics?page=" +
-      (page + 1);
-
-    const nextRes = await client.get(
-      nextUrl,
-      this.getHeaders(nextUrl)
-    );
-
-    const nextDoc = new Document(nextRes.body);
-
-    const nextLinks =
-      nextDoc.select('a[href*="/comics/"]');
-
-    hasNextPage = nextLinks.length > 0;
-  } catch (error) {
-    hasNextPage = true;
-  }
+  return {
+    list: list,
+    hasNextPage: false
+  };
 }
 
-return {
-  list: list,
-  hasNextPage: hasNextPage
-};
-
-
-}
 
 
 
