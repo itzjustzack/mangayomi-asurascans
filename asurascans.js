@@ -485,9 +485,11 @@ if (lower === "today") {
 
 
   
+
 return Number.isFinite(timestamp)
   ? String(Math.floor(timestamp))
-  : "0";
+  : "";
+
 
 })()
 
