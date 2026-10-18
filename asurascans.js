@@ -299,9 +299,11 @@ async search(query, page, filters) {
   for (const item of links) {
     const link = item.attr("href");
     const img = item.selectFirst("img");
-const name = img
-  ? (img.attr("alt") || "").trim()
-  : item.text.trim();
+
+const name = cleanAsuraText(
+  img ? (img.attr("alt") || item.text) : item.text
+);
+
 
 
     const imageUrl = img
