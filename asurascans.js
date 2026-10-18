@@ -451,7 +451,38 @@ dateUpload: (() => {
   if (!dateElement) return 0;
 
   const dateText = dateElement.text.trim();
-  const timestamp = Date.parse(dateText);
+  
+const lower = dateText.toLowerCase();
+const now = Date.now();
+let timestamp;
+
+if (lower === "today") {
+  timestamp = now;
+} else if (lower === "yesterday") {
+  timestamp = now - 86400000;
+} else if (lower === "last week") {
+  timestamp = now - 7 * 86400000;
+} else {
+  const match = lower.match(
+    /(\d+)\s+(minute|hour|day|week|month|year)s?\s+ago/
+  );
+
+  if (match) {
+    const units = {
+      minute: 60000,
+      hour: 3600000,
+      day: 86400000,
+      week: 604800000,
+      month: 2592000000,
+      year: 31536000000
+    };
+
+    timestamp = now - Number(match[1]) * units[match[2]];
+  } else {
+    timestamp = Date.parse(dateText);
+  }
+}
+
 
   return Number.isNaN(timestamp)
     ? 0
