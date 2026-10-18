@@ -93,22 +93,22 @@ async getPopular(page) {
     const img = item.selectFirst("img");
 
     
+
 const name = (
   img
     ? (img.attr("alt") || item.text)
     : item.text
 )
+  .replace(/â[\u0080-\u009F]*[€™]/g, "’")
   .replace(/â/g, "’")
-  .replace(/â/g, "‘")
-  .replace(/â/g, "“")
-  .replace(/â/g, "”")
-  .replace(/â/g, "–")
-  .replace(/â/g, "—")
-  .replace(/â¦/g, "…")
-  .replace(/Â /g, " ")
+  .replace(/â€™/g, "’")
+  .replace(/&rsquo;/g, "’")
+  .replace(/&#8217;/g, "’")
+  .replace(/&#x2019;/gi, "’")
   .replace(/^\s*\d+\s+/, "")
   .replace(/\s+\d+(?:\.\d+)?\s*$/, "")
   .trim();
+
 
 
     let imageUrl = img
