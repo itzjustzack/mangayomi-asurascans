@@ -440,7 +440,24 @@ if (name.toLowerCase().includes("test chapter")) {
 
 
 
-    url: item.attr("href")
+    
+url: item.attr("href"),
+
+dateUpload: (() => {
+  const dateElement = item.selectFirst(
+    "div.text-right span"
+  );
+
+  if (!dateElement) return 0;
+
+  const dateText = dateElement.text.trim();
+  const timestamp = Date.parse(dateText);
+
+  return Number.isNaN(timestamp)
+    ? 0
+    : Math.floor(timestamp / 1000);
+})()
+
   }))
   
 .filter(item =>
