@@ -1,8 +1,8 @@
 
 [
   {
-    "name": "Asura Scans DEV",
-    "id": 2847619032,
+    "name": "Asura Scans",
+    "id": 2847619031,
     "baseUrl": "https://asurascans.com",
     "lang": "en",
     "typeSource": "single",
@@ -11,7 +11,7 @@
     "dateFormatLocale": "",
     "isNsfw": false,
     "hasCloudflare": false,
-    "sourceCodeUrl": "https://raw.githubusercontent.com/itzjustzack/mangayomi-asurascans/development/asurascans.js",
+    "sourceCodeUrl": "https://raw.githubusercontent.com/itzjustzack/mangayomi-asurascans/main/asurascans.js",
     "apiUrl": "",
     "version": "0.0.10",
     "isManga": true,
