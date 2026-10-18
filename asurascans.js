@@ -7,7 +7,7 @@ const mangayomiSources = [{
     "typeSource": "single",
     "itemType": 0,
     "isNsfw": false,
-    "version": "0.0.11",
+    "version": "0.0.12",
     "pkgPath": "",
     "notes": "Stable Asura Scans extension"
 }];
