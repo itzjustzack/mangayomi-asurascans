@@ -115,22 +115,36 @@ const imageUrl = img
   }
 
   
-const nextUrl =
-  "https://asurascans.com/browse/comics?page=" + (page + 1);
 
-const nextRes = await client.get(
-  nextUrl,
-  this.getHeaders(nextUrl)
-);
+let hasNextPage = false;
 
-const nextDoc = new Document(nextRes.body);
+if (list.length > 0) {
+  try {
+    const nextUrl =
+      "https://asurascans.com/browse/comics?page=" +
+      (page + 1);
 
-const nextLinks = nextDoc.select('a[href*="/comics/"]');
+    const nextRes = await client.get(
+      nextUrl,
+      this.getHeaders(nextUrl)
+    );
+
+    const nextDoc = new Document(nextRes.body);
+
+    const nextLinks =
+      nextDoc.select('a[href*="/comics/"]');
+
+    hasNextPage = nextLinks.length > 0;
+  } catch (error) {
+    hasNextPage = true;
+  }
+}
 
 return {
   list: list,
-  hasNextPage: nextLinks.length > 0
+  hasNextPage: hasNextPage
 };
+
 
 }
 
