@@ -11,8 +11,9 @@
     "dateFormatLocale": "",
     "isNsfw": false,
     "hasCloudflare": false,
-    "sourceCodeUrl": "https://raw.githubusercontent.com/itzjustzack/mangayomi-asurascans/development/asurascans.js"
-    "apiUrl": "",
+    
+"sourceCodeUrl": "https://raw.githubusercontent.com/itzjustzack/mangayomi-asurascans/development/asurascans.js",
+"apiUrl": "",
     "version": "0.0.11",
     "isManga": true,
     "itemType": 0,
