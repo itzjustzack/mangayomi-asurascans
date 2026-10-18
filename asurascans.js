@@ -1,5 +1,5 @@
 const mangayomiSources = [{
-    "name": "Asura Scans ",
+    "name": "Asura Scans",
     "lang": "en",
     "baseUrl": "https://asurascans.com",
     "apiUrl": "",
@@ -7,9 +7,9 @@ const mangayomiSources = [{
     "typeSource": "single",
     "itemType": 0,
     "isNsfw": false,
-    "version": "0.0.1",
+    "version": "0.0.10",
     "pkgPath": "",
-    "notes": "Customer Asura Scans Source"
+    "notes": "Stable Asura Scans extension"
 }];
 
 // Every method returns plain data (objects, arrays, strings, numbers and
@@ -30,6 +30,22 @@ const mangayomiSources = [{
 //       Described in getDetail.
 //   new SharedPreferences().get(key)
 //       Described in getSourcePreferences.
+
+function cleanAsuraText(value) {
+  if (!value) return "";
+
+  return String(value)
+    .replace(/\u00E2\u0080\u0099/g, "\u2019")
+    .replace(/\u00E2\u0080\u0098/g, "\u2018")
+    .replace(/\u00E2\u0080\u009C/g, "\u201C")
+    .replace(/\u00E2\u0080\u009D/g, "\u201D")
+    .replace(/\u00E2\u0080\u0093/g, "\u2013")
+    .replace(/\u00E2\u0080\u0094/g, "\u2014")
+    .replace(/\u00E2\u0080\u00A6/g, "\u2026")
+    .replace(/\u00C2\u00A0/g, " ")
+    .trim();
+}
+
 class DefaultExtension extends MProvider {
     /**
      * Optional. Extra HTTP headers to send with this source's requests.
@@ -65,18 +81,26 @@ getHeaders(url) {
      */
 
 
-async getPopular(page) {
-  const client = new Client();
-  const browseUrl =
-  "https://asurascans.com/browse/comics?page=" + page;
 
-const res = await client.get(
-  browseUrl,
-  this.getHeaders(browseUrl)
-);
+async getPopular(page) {
+  if (page > 1) {
+    return {
+      list: [],
+      hasNextPage: false
+    };
+  }
+
+  const client = new Client();
+  const url = "https://asurascans.com/series-ranking";
+
+  const res = await client.get(
+    url,
+    this.getHeaders(url)
+  );
 
   const doc = new Document(res.body);
   const links = doc.select('a[href*="/comics/"]');
+
   const list = [];
   const seen = new Set();
 
@@ -84,41 +108,46 @@ const res = await client.get(
     const link = item.attr("href");
     const img = item.selectFirst("img");
 
-const name = (
-  img
-    ? (img.attr("alt") || "")
-    : item.text
+    
+
+
+const name = cleanAsuraText(
+  img ? (img.attr("alt") || item.text) : item.text
 )
-  .replace(/â/g, "’")
-  .replace(/â/g, "“")
-  .replace(/â/g, "”")
-  .replace(/â/g, "–")
-  .replace(/â/g, "—")
+  .replace(/^\s*\d+\s+/, "")
+  .replace(/\s+\d+(?:\.\d+)?\s*$/, "")
   .trim();
 
-const imageUrl = img
-  ? (img.attr("src") || img.attr("data-src") || "")
-  : "";
+
+
+
+    let imageUrl = img
+      ? (img.attr("data-src") || img.attr("src") || "")
+      : "";
 
     if (!link || !name || seen.has(link)) continue;
-    if (!link.includes("/comics/")) continue;
 
     seen.add(link);
+
+    if (imageUrl.startsWith("/")) {
+      imageUrl = "https://asurascans.com" + imageUrl;
+    }
 
     list.push({
       name: name,
       link: link,
-      imageUrl: imageUrl.startsWith("/")
-  ? "https://asurascans.com" + imageUrl
-  : imageUrl
+      imageUrl: imageUrl
     });
+
+    if (list.length >= 30) break;
   }
 
   return {
     list: list,
-    hasNextPage: list.length > 0
+    hasNextPage: false
   };
 }
+
 
 
 
@@ -129,8 +158,8 @@ const imageUrl = img
      *     false
      */
     get supportsLatest() {
-        throw new Error("supportsLatest not implemented");
-    }
+    return true;
+}
 
     /**
      * Returns one page of the most recently updated entries.
@@ -148,9 +177,80 @@ const imageUrl = img
      *     hasNextPage: true
      * };
      */
-    async getLatestUpdates(page) {
-        throw new Error("getLatestUpdates not implemented");
+    
+async getLatestUpdates(page) {
+  const client = new Client();
+
+  const browseUrl =
+    "https://asurascans.com/browse/comics?page=" + page;
+
+  const res = await client.get(
+    browseUrl,
+    this.getHeaders(browseUrl)
+  );
+
+  const doc = new Document(res.body);
+  const links = doc.select('a[href*="/comics/"]');
+
+  const list = [];
+  const seen = new Set();
+
+  for (const item of links) {
+    const link = item.attr("href");
+    const img = item.selectFirst("img");
+
+    
+const name = cleanAsuraText(
+  img ? (img.attr("alt") || item.text) : item.text
+);
+
+
+    const imageUrl = img
+      ? (img.attr("data-src") || img.attr("src") || "")
+      : "";
+
+    if (!link || !name || seen.has(link)) continue;
+
+    seen.add(link);
+
+    list.push({
+      name: name,
+      link: link,
+      imageUrl: imageUrl.startsWith("/")
+        ? "https://asurascans.com" + imageUrl
+        : imageUrl
+    });
+  }
+
+  let hasNextPage = false;
+
+  if (list.length > 0) {
+    try {
+      const nextUrl =
+        "https://asurascans.com/browse/comics?page=" +
+        (page + 1);
+
+      const nextRes = await client.get(
+        nextUrl,
+        this.getHeaders(nextUrl)
+      );
+
+      const nextDoc = new Document(nextRes.body);
+      const nextLinks =
+        nextDoc.select('a[href*="/comics/"]');
+
+      hasNextPage = nextLinks.length > 0;
+    } catch (error) {
+      hasNextPage = true;
     }
+  }
+
+  return {
+    list: list,
+    hasNextPage: hasNextPage
+  };
+}
+
 
     /**
      * Returns one page of search results.
@@ -199,9 +299,11 @@ async search(query, page, filters) {
   for (const item of links) {
     const link = item.attr("href");
     const img = item.selectFirst("img");
-const name = img
-  ? (img.attr("alt") || "").trim()
-  : item.text.trim();
+
+const name = cleanAsuraText(
+  img ? (img.attr("alt") || item.text) : item.text
+);
+
 
 
     const imageUrl = img
@@ -280,7 +382,9 @@ async getDetail(url) {
   const title = doc.selectFirst("h1");
 
   return {
-    name: title ? title.text.trim() : "Title not found",
+    name: title
+  ? cleanAsuraText(title.text)
+  : "Title not found",
     
 imageUrl: (() => {
   const meta = doc.selectFirst('meta[property="og:image"]');
