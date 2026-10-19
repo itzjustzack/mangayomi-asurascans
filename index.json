@@ -1,8 +1,8 @@
 
 [
   {
-    "name": "Asura Scans",
-    "id": 2847619031,
+    "name": "Asura Scans DEV",
+    "id": 2847619032,
     "baseUrl": "https://asurascans.com",
     "lang": "en",
     "typeSource": "single",
@@ -13,7 +13,7 @@
     "hasCloudflare": false,
     
 
-"sourceCodeUrl": "https://raw.githubusercontent.com/itzjustzack/mangayomi-asurascans/main/asurascans.js",
+"sourceCodeUrl": "https://raw.githubusercontent.com/itzjustzack/mangayomi-asurascans/development/asurascans.js",
 "apiUrl": "",
 
     "version": "0.0.12",
@@ -23,6 +23,6 @@
     "appMinVerReq": "0.5.0",
     "additionalParams": "",
     "sourceCodeLanguage": 1,
-    "notes": "Custom Asura Scans extension"
+    "notes": "Development build of Asura Scans"
   }
 ]

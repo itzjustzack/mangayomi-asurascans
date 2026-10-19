@@ -1,5 +1,5 @@
 const mangayomiSources = [{
-    name: "Asura Scans",
+    name: "Asura Scans DEV",
     "lang": "en",
     "baseUrl": "https://asurascans.com",
     "apiUrl": "",
@@ -9,7 +9,7 @@ const mangayomiSources = [{
     "isNsfw": false,
     "version": "0.0.12",
     "pkgPath": "",
-    notes: "Stable release with chapter upload dates"
+    notes: "Development build with chapter upload dates"
 }];
 
 // Every method returns plain data (objects, arrays, strings, numbers and
