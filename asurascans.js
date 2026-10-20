@@ -7,9 +7,9 @@ const mangayomiSources = [{
     "typeSource": "single",
     "itemType": 0,
     "isNsfw": false,
-    "version": "0.0.12",
+    "version": "0.0.13",
     "pkgPath": "",
-    notes: "Development build with chapter upload dates"
+    notes: "Development build with repaired synopsis punctuation"
 }];
 
 // Every method returns plain data (objects, arrays, strings, numbers and
@@ -34,16 +34,23 @@ const mangayomiSources = [{
 function cleanAsuraText(value) {
   if (!value) return "";
 
-  return String(value)
-    .replace(/\u00E2\u0080\u0099/g, "\u2019")
-    .replace(/\u00E2\u0080\u0098/g, "\u2018")
-    .replace(/\u00E2\u0080\u009C/g, "\u201C")
-    .replace(/\u00E2\u0080\u009D/g, "\u201D")
-    .replace(/\u00E2\u0080\u0093/g, "\u2013")
-    .replace(/\u00E2\u0080\u0094/g, "\u2014")
-    .replace(/\u00E2\u0080\u00A6/g, "\u2026")
-    .replace(/\u00C2\u00A0/g, " ")
-    .trim();
+  // UTF-8 punctuation can arrive decoded as Latin-1 or Windows-1252.
+  // Replace only known broken sequences so valid Unicode stays intact.
+  const repairs = [
+    [/\u00E2(?:\u0080|\u20AC)(?:\u0099|\u2122)/g, "\u2019"],
+    [/\u00E2(?:\u0080|\u20AC)(?:\u0098|\u02DC)/g, "\u2018"],
+    [/\u00E2(?:\u0080|\u20AC)(?:\u009C|\u0153)/g, "\u201C"],
+    [/\u00E2(?:\u0080|\u20AC)\u009D/g, "\u201D"],
+    [/\u00E2(?:\u0080|\u20AC)(?:\u0093|\u201C)/g, "\u2013"],
+    [/\u00E2(?:\u0080|\u20AC)(?:\u0094|\u201D)/g, "\u2014"],
+    [/\u00E2(?:\u0080|\u20AC)\u00A6/g, "\u2026"],
+    [/\u00C2\u00A0/g, " "]
+  ];
+  let text = String(value);
+  for (const repair of repairs) {
+    text = text.replace(repair[0], repair[1]);
+  }
+  return text.trim();
 }
 
 class DefaultExtension extends MProvider {
@@ -406,7 +413,7 @@ imageUrl: (() => {
 description: (() => {
   const meta = doc.selectFirst('meta[name="description"]');
   const text = meta ? meta.attr("content") : "";
-  return text || "No description available";
+  return cleanAsuraText(text) || "No description available";
 })(),
     author: "",
     artist: "",
