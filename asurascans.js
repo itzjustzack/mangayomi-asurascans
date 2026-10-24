@@ -7,9 +7,9 @@ const mangayomiSources = [{
     "typeSource": "single",
     "itemType": 0,
     "isNsfw": false,
-    "version": "0.0.13",
+    "version": "0.0.14",
     "pkgPath": "",
-    notes: "Stable release with repaired synopsis punctuation"
+    notes: "Search filters for genres, status, type, sorting, creators and minimum chapters"
 }];
 
 // Every method returns plain data (objects, arrays, strings, numbers and
@@ -285,57 +285,54 @@ const name = cleanAsuraText(
      */
     
 async search(query, page, filters) {
-  const client = new Client();
-
-  const searchUrl =
-  "https://asurascans.com/browse/comics?search=" +
-  encodeURIComponent(query) +
-  "&page=" + page;
-
-  const res = await client.get(
-    searchUrl,
-    this.getHeaders(searchUrl)
-  );
-
-  const doc = new Document(res.body);
-  const links = doc.select('a[href*="/comics/"]');
-
+  filters = filters && filters.length ? filters : this.getFilterList();
+  const selected = (index, fallback) => {
+    const f = filters[index];
+    return f && f.values && f.values[f.state] ? f.values[f.state].value : fallback;
+  };
+  const params = [];
+  const add = (key, value) => {
+    if (value !== undefined && value !== null && value !== '') {
+      params.push(encodeURIComponent(key) + '=' + encodeURIComponent(value));
+    }
+  };
+  const pageNumber = Math.max(1, Math.floor(Number(page) || 1));
+  add('search', (query || '').trim());
+  add('sort', selected(0, 'latest'));
+  add('order', selected(1, 'desc'));
+  const group = filters[2];
+  add('genres', group && Array.isArray(group.state)
+    ? group.state.filter(item => item.state === true).map(item => item.value).join(',') : '');
+  add('status', selected(3, ''));
+  add('type', selected(4, ''));
+  add('min_chapters', selected(5, ''));
+  add('author', filters[6] && typeof filters[6].state === 'string' ? filters[6].state.trim() : '');
+  add('artist', filters[7] && typeof filters[7].state === 'string' ? filters[7].state.trim() : '');
+  add('limit', 20);
+  add('offset', (pageNumber - 1) * 20);
+  const url = 'https://api.asurascans.com/api/series?' + params.join('&');
+  const res = await new Client().get(url, this.getHeaders(url));
+  if (res.statusCode != 200) throw new Error('Asura search returned HTTP ' + res.statusCode);
+  const body = JSON.parse(res.body);
+  // The API serializes an empty result set as null rather than [].
+  if (body.data === null && body.meta && body.meta.per_page) body.data = [];
+  if (!Array.isArray(body.data)) throw new Error('Asura returned an unexpected search response');
   const list = [];
   const seen = new Set();
-
-  for (const item of links) {
-    const link = item.attr("href");
-    const img = item.selectFirst("img");
-
-const name = cleanAsuraText(
-  img ? (img.attr("alt") || item.text) : item.text
-);
-
-
-
-    const imageUrl = img
-      ? (img.attr("src") || img.attr("data-src") || "")
-      : "";
-
-    if (!link || !name || seen.has(link)) continue;
-
+  for (const item of body.data) {
+    // Use the same public comic URLs as existing library entries.
+    const link = item.public_url;
+    const name = cleanAsuraText(item.title || item.name || '');
+    if (!link || !link.startsWith('/comics/') || !name || seen.has(link)) continue;
     seen.add(link);
-
-    list.push({
-      name: name,
-      link: link,
-      imageUrl: imageUrl.startsWith("/")
-        ? "https://asurascans.com" + imageUrl
-        : imageUrl
-    });
+    let imageUrl = item.cover_url || item.cover || item.thumb || '';
+    if (imageUrl.startsWith('/')) imageUrl = 'https://asurascans.com' + imageUrl;
+    list.push({ name, link, imageUrl });
   }
-
-  return {
-    list: list,
-    hasNextPage: list.length > 0
-  };
+  const total = body.meta && body.meta.total != null ? Number(body.meta.total) : NaN;
+  return { list, hasNextPage: Number.isFinite(total)
+    ? pageNumber * 20 < total : body.data.length === 20 };
 }
-
 
     /**
      * Returns the full details of one entry, including its list of chapters
@@ -651,7 +648,447 @@ async getPageList(url) {
      * ];
      */
     getFilterList() {
-        throw new Error("getFilterList not implemented");
+        return [
+  {
+    "type_name": "SelectFilter",
+    "type": "sort",
+    "name": "Sort By",
+    "state": 0,
+    "values": [
+      {
+        "type_name": "SelectOption",
+        "name": "Latest Update",
+        "value": "latest"
+      },
+      {
+        "type_name": "SelectOption",
+        "name": "Popularity",
+        "value": "popular"
+      },
+      {
+        "type_name": "SelectOption",
+        "name": "Rating",
+        "value": "rating"
+      },
+      {
+        "type_name": "SelectOption",
+        "name": "Title",
+        "value": "title"
+      },
+      {
+        "type_name": "SelectOption",
+        "name": "Newest Added",
+        "value": "newest"
+      }
+    ]
+  },
+  {
+    "type_name": "SelectFilter",
+    "type": "direction",
+    "name": "Sort Direction",
+    "state": 0,
+    "values": [
+      {
+        "type_name": "SelectOption",
+        "name": "Descending",
+        "value": "desc"
+      },
+      {
+        "type_name": "SelectOption",
+        "name": "Ascending",
+        "value": "asc"
+      }
+    ]
+  },
+  {
+    "type_name": "GroupFilter",
+    "type": "genres",
+    "name": "Genres",
+    "state": [
+      {
+        "type_name": "CheckBox",
+        "type": "genre",
+        "name": "Action",
+        "value": "action",
+        "state": false
+      },
+      {
+        "type_name": "CheckBox",
+        "type": "genre",
+        "name": "Adventure",
+        "value": "adventure",
+        "state": false
+      },
+      {
+        "type_name": "CheckBox",
+        "type": "genre",
+        "name": "Comedy",
+        "value": "comedy",
+        "state": false
+      },
+      {
+        "type_name": "CheckBox",
+        "type": "genre",
+        "name": "Crazy MC",
+        "value": "crazy-mc",
+        "state": false
+      },
+      {
+        "type_name": "CheckBox",
+        "type": "genre",
+        "name": "Dark Fantasy",
+        "value": "dark-fantasy",
+        "state": false
+      },
+      {
+        "type_name": "CheckBox",
+        "type": "genre",
+        "name": "Demon",
+        "value": "demon",
+        "state": false
+      },
+      {
+        "type_name": "CheckBox",
+        "type": "genre",
+        "name": "Drama",
+        "value": "drama",
+        "state": false
+      },
+      {
+        "type_name": "CheckBox",
+        "type": "genre",
+        "name": "Dungeons",
+        "value": "dungeons",
+        "state": false
+      },
+      {
+        "type_name": "CheckBox",
+        "type": "genre",
+        "name": "Fantasy",
+        "value": "fantasy",
+        "state": false
+      },
+      {
+        "type_name": "CheckBox",
+        "type": "genre",
+        "name": "Game",
+        "value": "game",
+        "state": false
+      },
+      {
+        "type_name": "CheckBox",
+        "type": "genre",
+        "name": "Genius MC",
+        "value": "genius-mc",
+        "state": false
+      },
+      {
+        "type_name": "CheckBox",
+        "type": "genre",
+        "name": "Isekai",
+        "value": "isekai",
+        "state": false
+      },
+      {
+        "type_name": "CheckBox",
+        "type": "genre",
+        "name": "Magic",
+        "value": "magic",
+        "state": false
+      },
+      {
+        "type_name": "CheckBox",
+        "type": "genre",
+        "name": "Martial Arts",
+        "value": "martial-arts",
+        "state": false
+      },
+      {
+        "type_name": "CheckBox",
+        "type": "genre",
+        "name": "Murim",
+        "value": "murim",
+        "state": false
+      },
+      {
+        "type_name": "CheckBox",
+        "type": "genre",
+        "name": "Mystery",
+        "value": "mystery",
+        "state": false
+      },
+      {
+        "type_name": "CheckBox",
+        "type": "genre",
+        "name": "Necromancer",
+        "value": "necromancer",
+        "state": false
+      },
+      {
+        "type_name": "CheckBox",
+        "type": "genre",
+        "name": "Overpowered",
+        "value": "overpowered",
+        "state": false
+      },
+      {
+        "type_name": "CheckBox",
+        "type": "genre",
+        "name": "Psychological",
+        "value": "psychological",
+        "state": false
+      },
+      {
+        "type_name": "CheckBox",
+        "type": "genre",
+        "name": "Regression",
+        "value": "regression",
+        "state": false
+      },
+      {
+        "type_name": "CheckBox",
+        "type": "genre",
+        "name": "Reincarnation",
+        "value": "reincarnation",
+        "state": false
+      },
+      {
+        "type_name": "CheckBox",
+        "type": "genre",
+        "name": "Revenge",
+        "value": "revenge",
+        "state": false
+      },
+      {
+        "type_name": "CheckBox",
+        "type": "genre",
+        "name": "Romance",
+        "value": "romance",
+        "state": false
+      },
+      {
+        "type_name": "CheckBox",
+        "type": "genre",
+        "name": "School Life",
+        "value": "school-life",
+        "state": false
+      },
+      {
+        "type_name": "CheckBox",
+        "type": "genre",
+        "name": "Sci-fi",
+        "value": "sci-fi",
+        "state": false
+      },
+      {
+        "type_name": "CheckBox",
+        "type": "genre",
+        "name": "Shoujo",
+        "value": "shoujo",
+        "state": false
+      },
+      {
+        "type_name": "CheckBox",
+        "type": "genre",
+        "name": "Shounen",
+        "value": "shounen",
+        "state": false
+      },
+      {
+        "type_name": "CheckBox",
+        "type": "genre",
+        "name": "Slice of Life",
+        "value": "slice-of-life",
+        "state": false
+      },
+      {
+        "type_name": "CheckBox",
+        "type": "genre",
+        "name": "Supernatural",
+        "value": "supernatural",
+        "state": false
+      },
+      {
+        "type_name": "CheckBox",
+        "type": "genre",
+        "name": "System",
+        "value": "system",
+        "state": false
+      },
+      {
+        "type_name": "CheckBox",
+        "type": "genre",
+        "name": "Tower",
+        "value": "tower",
+        "state": false
+      },
+      {
+        "type_name": "CheckBox",
+        "type": "genre",
+        "name": "Tragedy",
+        "value": "tragedy",
+        "state": false
+      },
+      {
+        "type_name": "CheckBox",
+        "type": "genre",
+        "name": "Transmigration",
+        "value": "transmigration",
+        "state": false
+      },
+      {
+        "type_name": "CheckBox",
+        "type": "genre",
+        "name": "Villain",
+        "value": "villain",
+        "state": false
+      },
+      {
+        "type_name": "CheckBox",
+        "type": "genre",
+        "name": "Violence",
+        "value": "violence",
+        "state": false
+      }
+    ]
+  },
+  {
+    "type_name": "SelectFilter",
+    "type": "status",
+    "name": "Publishing Status",
+    "state": 0,
+    "values": [
+      {
+        "type_name": "SelectOption",
+        "name": "Any",
+        "value": ""
+      },
+      {
+        "type_name": "SelectOption",
+        "name": "Ongoing",
+        "value": "ongoing"
+      },
+      {
+        "type_name": "SelectOption",
+        "name": "Completed",
+        "value": "completed"
+      },
+      {
+        "type_name": "SelectOption",
+        "name": "Hiatus",
+        "value": "hiatus"
+      },
+      {
+        "type_name": "SelectOption",
+        "name": "Dropped",
+        "value": "dropped"
+      },
+      {
+        "type_name": "SelectOption",
+        "name": "Axed",
+        "value": "axed"
+      }
+    ]
+  },
+  {
+    "type_name": "SelectFilter",
+    "type": "type",
+    "name": "Manga Type",
+    "state": 0,
+    "values": [
+      {
+        "type_name": "SelectOption",
+        "name": "Any",
+        "value": ""
+      },
+      {
+        "type_name": "SelectOption",
+        "name": "Manhwa",
+        "value": "manhwa"
+      },
+      {
+        "type_name": "SelectOption",
+        "name": "Manhua",
+        "value": "manhua"
+      },
+      {
+        "type_name": "SelectOption",
+        "name": "Mangatoon / Manga",
+        "value": "manga"
+      }
+    ]
+  },
+  {
+    "type_name": "SelectFilter",
+    "type": "min_chapters",
+    "name": "Minimum Chapters",
+    "state": 0,
+    "values": [
+      {
+        "type_name": "SelectOption",
+        "name": "Any",
+        "value": ""
+      },
+      {
+        "type_name": "SelectOption",
+        "name": "1+",
+        "value": "1"
+      },
+      {
+        "type_name": "SelectOption",
+        "name": "10+",
+        "value": "10"
+      },
+      {
+        "type_name": "SelectOption",
+        "name": "25+",
+        "value": "25"
+      },
+      {
+        "type_name": "SelectOption",
+        "name": "50+",
+        "value": "50"
+      },
+      {
+        "type_name": "SelectOption",
+        "name": "100+",
+        "value": "100"
+      },
+      {
+        "type_name": "SelectOption",
+        "name": "150+",
+        "value": "150"
+      },
+      {
+        "type_name": "SelectOption",
+        "name": "200+",
+        "value": "200"
+      },
+      {
+        "type_name": "SelectOption",
+        "name": "300+",
+        "value": "300"
+      },
+      {
+        "type_name": "SelectOption",
+        "name": "500+",
+        "value": "500"
+      }
+    ]
+  },
+  {
+    "type_name": "TextFilter",
+    "type": "author",
+    "name": "Author",
+    "state": ""
+  },
+  {
+    "type_name": "TextFilter",
+    "type": "artist",
+    "name": "Artist",
+    "state": ""
+  }
+];
     }
 
     /**
