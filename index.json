@@ -1,24 +1,25 @@
 [
   {
     "name": "Asura Scans",
-    "id": 2847619031,
-    "baseUrl": "https://asurascans.com",
     "lang": "en",
-    "typeSource": "single",
+    "baseUrl": "https://asurascans.com",
+    "apiUrl": "",
     "iconUrl": "https://asurascans.com/favicon.ico",
+    "typeSource": "single",
+    "itemType": 0,
+    "isNsfw": false,
+    "version": "0.0.15",
+    "pkgPath": "",
+    "notes": "Adds search filters: genres, status, manga type, sorting, minimum chapters, author and artist",
+    "id": 2847619031,
     "dateFormat": "",
     "dateFormatLocale": "",
-    "isNsfw": false,
     "hasCloudflare": false,
-    "sourceCodeUrl": "https://raw.githubusercontent.com/itzjustzack/mangayomi-asurascans/main/asurascans.js",
-    "apiUrl": "",
-    "version": "0.0.14",
+    "sourceCodeUrl": "https://raw.githubusercontent.com/itzjustzack/mangayomi-extra-sources/main/asurascans.js?v=0.0.15",
     "isManga": true,
-    "itemType": 0,
     "isFullData": false,
     "appMinVerReq": "0.5.0",
     "additionalParams": "",
-    "sourceCodeLanguage": 1,
-    "notes": "Adds search filters: genres, status, manga type, sorting, minimum chapters, author and artist"
+    "sourceCodeLanguage": 1
   }
 ]
