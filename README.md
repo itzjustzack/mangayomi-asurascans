@@ -8,4 +8,4 @@ https://raw.githubusercontent.com/itzjustzack/mangayomi-extra-sources/main/index
 
 The old index.json in this repository remains a compatibility catalogue pointing to the current unified source file. Existing source name and ID are preserved. Refresh Extensions and update; do not uninstall or migrate your library.
 
-Current version: 0.0.15.
+Current version: 0.0.16.
